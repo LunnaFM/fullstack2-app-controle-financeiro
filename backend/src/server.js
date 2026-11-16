@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 
 const { rotaNaoEncontrada, tratarErros } = require('./middlewares/erros');
+const authRoutes = require('./routes/auth.routes');
 
 const app = express();
 
@@ -14,6 +15,9 @@ app.use(express.json());
 // ---------------------------------------------------------------------------
 // Rotas
 // ---------------------------------------------------------------------------
+
+// Públicas: cadastro e login
+app.use('/api/auth', authRoutes);
 
 // ---------------------------------------------------------------------------
 
