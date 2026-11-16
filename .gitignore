@@ -1,0 +1,18 @@
+# dependências
+node_modules/
+
+# variáveis de ambiente (nunca versionar)
+.env
+.env.local
+
+# build e logs
+dist/
+build/
+coverage/
+*.log
+
+# sistema / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
