@@ -9,6 +9,7 @@ const Usuario = require('../models/Usuario');
 const { ErroApi } = require('../middlewares/erros');
 const { validarCadastro, validarLogin } = require('../middlewares/validarAuth');
 const limitarLogin = require('../middlewares/limitarLogin');
+const autenticar = require('../middlewares/autenticar');
 
 const router = express.Router();
 
@@ -63,6 +64,16 @@ router.post('/login', limitarLogin, validarLogin, async (req, res) => {
     token,
     usuario: { id: usuario.id, nome: usuario.nome, email: usuario.email },
   });
+});
+
+// GET /api/auth/me (protegida): dados do usuário dono do token
+router.get('/me', autenticar, async (req, res) => {
+  const usuario = await Usuario.buscarPorId(req.usuarioId);
+
+  if (!usuario) {
+    throw new ErroApi(404, 'Usuário não encontrado.');
+  }
+  return res.json(usuario);
 });
 
 module.exports = router;
