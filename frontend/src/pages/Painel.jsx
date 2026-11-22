@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { lazy, Suspense, useState, useEffect, useMemo } from 'react';
 import {
   Wallet,
   LogOut,
@@ -20,8 +20,6 @@ import {
   AlertTriangle,
   AlertCircle,
   CheckCircle2,
-  PieChart,
-  BarChart3,
   X,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -35,6 +33,8 @@ import {
   filtrarLancamentosPorPeriodo,
   serializarCsv,
 } from '../services/relatorios';
+
+const RelatorioGraficos = lazy(() => import('../components/RelatorioGraficos'));
 
 const DEMO_CATEGORIAS = [
   { id: 1, nome: 'Salário', tipo: 'entrada' },
@@ -281,7 +281,6 @@ export default function Painel() {
     () => filtrarLancamentosPorPeriodo(lancamentos, periodoRelatorio, hoje),
     [lancamentos, periodoRelatorio, hoje]
   );
-
   const resumoKpi = useMemo(() => {
     const entradas = lancamentosDoPeriodo
       .filter((l) => l.tipo === 'entrada')
@@ -295,32 +294,30 @@ export default function Painel() {
   const dadosGraficoCategorias = useMemo(() => {
     const mapa = {};
     lancamentosDoPeriodo
-      .filter((l) => l.tipo === 'saida')
-      .forEach((l) => {
-        const cat =
-          l.categoria?.nome ||
-          categorias.find((c) => Number(c.id) === Number(l.categoriaId))?.nome ||
+      .filter((item) => item.tipo === 'saida')
+      .forEach((item) => {
+        const nome =
+          item.categoria?.nome ||
+          categorias.find(
+            (categoria) => Number(categoria.id) === Number(item.categoriaId)
+          )?.nome ||
           'Outros';
-        mapa[cat] = (mapa[cat] || 0) + Number(l.valor || 0);
+        mapa[nome] = (mapa[nome] || 0) + Number(item.valor || 0);
       });
+
     return Object.entries(mapa)
       .map(([nome, total]) => ({ nome, total }))
       .sort((a, b) => b.total - a.total);
   }, [lancamentosDoPeriodo, categorias]);
-  const totalGastosCategorias = dadosGraficoCategorias.reduce(
-    (total, categoria) => total + categoria.total,
-    0
-  );
-
   const dadosGraficoFontes = useMemo(() => {
     const mapa = {};
     lancamentosDoPeriodo.forEach((l) => {
-      const f =
+      const nome =
         l.fonteDestino?.nome ||
         l.fonte_destino?.nome ||
         fontes.find((item) => Number(item.id) === Number(l.fonteDestinoId))?.nome ||
         'Conta Principal';
-      mapa[f] = (mapa[f] || 0) + Number(l.valor || 0);
+      mapa[nome] = (mapa[nome] || 0) + Number(l.valor || 0);
     });
     return Object.entries(mapa)
       .map(([nome, total]) => ({ nome, total }))
@@ -331,10 +328,11 @@ export default function Painel() {
     () => fontes.filter((fonte) => fonte.tipo === 'cartao_credito'),
     [fontes]
   );
-  const mesesFatura = useMemo(
+  const mesesPrevistos = useMemo(
     () => proximasCompetencias(hoje, 3),
     [hoje]
   );
+  const mesesFatura = mesesPrevistos;
   const faturasComDetalhe = useMemo(() => {
     const fontesPorId = new Map(
       cartoes.map((cartao) => [String(cartao.id), cartao])
@@ -373,12 +371,18 @@ export default function Painel() {
       };
     });
   }, [cartoes, lancamentos, mesesFatura]);
-  const previsaoFaturas = faturasComDetalhe.map((fatura) => ({
-    ...fatura,
-    quantidade: fatura.quantidade
-      ? `${fatura.quantidade} parcela(s) prevista(s)`
-      : 'Aguardando lançamentos',
-  }));
+  const previsaoFaturas = mesesPrevistos.map((mes) => {
+    const fatura = faturasComDetalhe.find(
+      (item) => item.chave === mes.chave
+    );
+    return {
+      ...mes,
+      total: fatura?.total || 0,
+      quantidade: fatura?.quantidade
+        ? `${fatura.quantidade} parcela(s) prevista(s)`
+        : 'Aguardando lançamentos',
+    };
+  });
   const cartaoSelecionado =
     cartoes.find((cartao) => String(cartao.id) === cartaoSelecionadoId) ||
     cartoes[0] ||
@@ -753,8 +757,6 @@ export default function Painel() {
     mostrarFeedback('Fonte/Destino removida.');
   }
 
-  const maxFonte = Math.max(...dadosGraficoFontes.map((f) => f.total), 1);
-
   return (
     <div>
       <header className="appbar">
@@ -954,84 +956,15 @@ export default function Painel() {
               </div>
             </div>
 
-            <div className="grid-2">
-              <div className="card">
-                <div className="card-header">
-                  <div className="card-title">
-                    <PieChart size={17} /> Gastos por Categoria
-                  </div>
-                </div>
-                {dadosGraficoCategorias.length === 0 ? (
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem' }}>
-                    Nenhum gasto registrado ainda.
-                  </p>
-                ) : (
-                  dadosGraficoCategorias.map((item) => {
-                    const pct = totalGastosCategorias > 0
-                      ? Math.round((item.total / totalGastosCategorias) * 100)
-                      : 0;
-                    return (
-                      <div key={item.nome} style={{ marginBottom: '0.95rem' }}>
-                        <div
-                          style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            fontSize: '0.86rem',
-                            fontWeight: 700,
-                          }}
-                        >
-                          <span>{item.nome}</span>
-                          <span className="tabular">
-                            {formatarMoeda(item.total)} ({pct}%)
-                          </span>
-                        </div>
-                        <div className="progress-track">
-                          <div className="progress-fill" style={{ width: `${pct}%` }} />
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-
-              <div className="card">
-                <div className="card-header">
-                  <div className="card-title">
-                    <BarChart3 size={17} /> Movimentação por Fonte / Destino
-                  </div>
-                </div>
-                {dadosGraficoFontes.length === 0 ? (
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem' }}>
-                    Nenhuma movimentação encontrada.
-                  </p>
-                ) : (
-                  dadosGraficoFontes.map((item) => {
-                    const pct = Math.round((item.total / maxFonte) * 100);
-                    return (
-                      <div key={item.nome} style={{ marginBottom: '0.95rem' }}>
-                        <div
-                          style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            fontSize: '0.86rem',
-                            fontWeight: 700,
-                          }}
-                        >
-                          <span>{item.nome}</span>
-                          <span className="tabular">{formatarMoeda(item.total)}</span>
-                        </div>
-                        <div className="progress-track">
-                          <div
-                            className="progress-fill"
-                            style={{ width: `${pct}%`, background: 'var(--forest)' }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </div>
+            <Suspense fallback={<div className="card">Carregando gráficos...</div>}>
+              <RelatorioGraficos
+                categorias={dadosGraficoCategorias}
+                fontes={dadosGraficoFontes}
+                entradas={resumoKpi.entradas}
+                saidas={resumoKpi.saidas}
+                formatarMoeda={formatarMoeda}
+              />
+            </Suspense>
 
             <div className="card">
               <div className="card-header">

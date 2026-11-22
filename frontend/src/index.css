@@ -464,6 +464,16 @@ input.input-error, select.input-error {
   font-size: 0.82rem;
 }
 
+.report-chart {
+  width: 100%;
+  height: 280px;
+  min-width: 0;
+}
+
+.grid-2 > .card {
+  min-width: 0;
+}
+
 .card-actions {
   display: flex;
   flex-wrap: wrap;
@@ -559,6 +569,10 @@ input.input-error, select.input-error {
   }
 
   .report-period-filter {
+    grid-template-columns: 1fr;
+  }
+
+  .grid-2 {
     grid-template-columns: 1fr;
   }
 }

@@ -25,8 +25,8 @@ inicie também o back-end conforme o [README principal](../README.md).
 
 ## Funcionalidades
 
-- **Visão Geral:** filtra totais e gráficos por mês, últimos três meses, ano ou
-  todo o período.
+- **Visão Geral:** filtra totais e gráficos Recharts por mês, últimos três meses,
+  ano ou todo o período, e compara entradas com saídas.
 - **Lançamentos:** permite filtrar o histórico por fonte/destino e exportar os
   resultados filtrados em CSV.
 - **Cartões e Faturas:** apresenta parcelas previstas por cartão e vencimento.
@@ -45,6 +45,8 @@ npm test
 frontend/
 ├── src/
 │   ├── App.jsx              # Rotas e proteção das páginas autenticadas
+│   ├── components/
+│   │   └── RelatorioGraficos.jsx # Gráficos de relatórios com Recharts
 │   ├── main.jsx             # Inicialização do React
 │   ├── contexts/
 │   │   └── AuthContext.jsx  # Sessão, login e cadastro
