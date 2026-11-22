@@ -7,7 +7,7 @@ Aplicação full stack de controle financeiro pessoal: o usuário se cadastra, f
 | Camada | Tecnologias |
 |---|---|
 | Back-end | Node.js 20+ (recomendado 22), Express 5, MySQL 8 (driver `mysql2` com pool), `bcrypt`, `jsonwebtoken`, `dotenv`, `cors`, `express-rate-limit`, `nodemon` (dev) |
-| Front-end | React + Vite (Parte 3) |
+| Front-end | React 19, React Router, Vite, Lucide React |
 | Testes | `node:test` (nativo do Node, sem biblioteca extra) |
 
 Decisões do grupo:
@@ -64,6 +64,28 @@ npm test
 ```
 
 No Windows (PowerShell), use `Get-Content database/schema.sql | mysql -u root -p` no passo 3, ou rode os arquivos pelo MySQL Workbench.
+
+## Como rodar o front-end
+
+Com a API em execução e configurada para aceitar a origem do Vite:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+O Vite mostra no terminal o endereço local da interface. Para validar a versão
+de produção e as regras de lint:
+
+```bash
+cd frontend
+npm run build
+npm run lint
+npm test
+```
+
+Veja o [README do front-end](frontend/README.md) para detalhes da estrutura.
 
 ### Variáveis de ambiente
 
