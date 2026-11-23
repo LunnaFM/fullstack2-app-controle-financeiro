@@ -770,3 +770,150 @@ tr:hover td {
   font-size: 0.85rem;
   z-index: 60;
 }
+/* --- NAVEGAÇÃO POR ROTAS, ESTADOS E RELATÓRIOS --- */
+a.tab-btn,
+a.btn {
+  text-decoration: none;
+}
+
+.filters-bar label {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.form-lancamento {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.form-lancamento .form-group {
+  margin-bottom: 0;
+}
+
+.estado-carregando {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 0;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.girando {
+  animation: girar 0.9s linear infinite;
+}
+
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.alerta-erro .btn {
+  margin-left: auto;
+}
+
+.paginacao {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  font-size: 0.84rem;
+  color: var(--text-muted);
+}
+
+.selo-parcela {
+  margin-left: 0.45rem;
+  font-size: 0.74rem;
+  background: var(--bg-sage);
+  border: 1px solid var(--forest);
+  padding: 1px 5px;
+}
+
+.aviso-parcelamento {
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+  padding: 0.6rem 0.8rem;
+  font-size: 0.82rem;
+  margin-top: 0.75rem;
+  border-radius: 2px;
+}
+
+.totais-periodo .kpi-value {
+  font-size: 1.25rem;
+}
+
+.kpi-card small,
+.previsao-fatura small {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.previsao-fatura {
+  border: 1.5px solid var(--forest);
+  background: var(--bg-sage);
+  padding: 1rem;
+  border-radius: 2px;
+}
+
+.previsao-topo {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--forest);
+  margin-bottom: 0.4rem;
+}
+
+.subtitulo {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--forest);
+}
+
+.variacao {
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.variacao.ruim {
+  color: var(--danger);
+}
+
+.variacao.boa {
+  color: var(--emerald);
+}
+
+.variacao.neutra {
+  color: var(--text-muted);
+}
+
+.modal-texto {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-bottom: 1.25rem;
+}
+
+.invoice-filter .progress-track,
+.invoice-filter > small {
+  grid-column: 1 / -1;
+}
+
+.invoice-card-details {
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+}
+
+tfoot td {
+  border-top: 2px solid var(--forest);
+}
