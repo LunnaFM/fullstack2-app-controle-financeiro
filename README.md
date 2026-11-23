@@ -2,6 +2,8 @@
 
 Aplicação full stack de controle financeiro pessoal: o usuário se cadastra, faz login e registra entradas e saídas por categoria e fonte/destino, com relatórios e previsão de faturas de cartão de crédito.
 
+Video Apresentação: https://drive.google.com/drive/folders/1_v_lGbjvtRIQhL8qrbWWJD1l40IDwCV_?usp=sharing
+
 ## Tecnologias
 
 | Camada | Tecnologias |
