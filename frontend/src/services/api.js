@@ -1,4 +1,8 @@
-const API_URL = 'http://localhost:3000/api';
+// Ponto único de comunicação com a API:
+// - adiciona o cabeçalho Authorization com o token salvo;
+// - em 401 (token ausente, inválido ou expirado), faz logout e volta ao login;
+// - transforma qualquer erro no formato { status, message, campos }.
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 export async function apiFetch(endpoint, options = {}) {
   const token = localStorage.getItem('token');
@@ -12,10 +16,13 @@ export async function apiFetch(endpoint, options = {}) {
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_URL}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  let response;
+  try {
+    response = await fetch(`${API_URL}${endpoint}`, { ...options, headers });
+  } catch {
+    // Servidor fora do ar ou sem rede
+    throw { status: 0, message: 'Não foi possível conectar à API. Verifique se o back-end está rodando.', campos: {} };
+  }
 
   const data = await response.json().catch(() => ({}));
 
