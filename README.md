@@ -7,7 +7,7 @@ Aplicação full stack de controle financeiro pessoal: o usuário se cadastra, f
 | Camada | Tecnologias |
 |---|---|
 | Back-end | Node.js 20+ (recomendado 22), Express 5, MySQL 8 (driver `mysql2` com pool), `bcrypt`, `jsonwebtoken`, `dotenv`, `cors`, `express-rate-limit`, `nodemon` (dev) |
-| Front-end | React + Vite (Parte 3) |
+| Front-end | React 19, React Router, Vite, Recharts (gráficos), Lucide React (ícones) |
 | Testes | `node:test` (nativo do Node, sem biblioteca extra) |
 
 Decisões do grupo:
@@ -33,7 +33,7 @@ Decisões do grupo:
 │   │   ├── models/           → acesso ao banco (SQL) e regras de negócio
 │   │   └── routes/           → rotas + controladores
 │   └── tests/                → testes unitários
-├── frontend/                 → SPA React (Parte 3)
+├── frontend/                 → SPA React (veja frontend/README.md)
 └── README.md
 ```
 
@@ -65,6 +65,28 @@ npm test
 
 No Windows (PowerShell), use `Get-Content database/schema.sql | mysql -u root -p` no passo 3, ou rode os arquivos pelo MySQL Workbench.
 
+## Como rodar o front-end
+
+Com a API em execução e configurada para aceitar a origem do Vite:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+O Vite mostra no terminal o endereço local da interface. Para validar a versão
+de produção e as regras de lint:
+
+```bash
+cd frontend
+npm run build
+npm run lint
+npm test
+```
+
+Veja o [README do front-end](frontend/README.md) para detalhes da estrutura.
+
 ### Variáveis de ambiente
 
 | Variável | Descrição | Exemplo |
@@ -93,16 +115,16 @@ Todas as rotas abaixo de `/api`, exceto cadastro e login, exigem o cabeçalho `A
 | POST | `/api/auth/cadastro` | Cadastra usuário (cria categorias e fonte/destino padrão) | Pronta |
 | POST | `/api/auth/login` | Autentica e devolve o JWT | Pronta |
 | GET | `/api/auth/me` | Dados do usuário logado | Pronta |
-| GET, POST | `/api/categorias` | Lista / cria categorias | Parte 2 |
-| PUT, DELETE | `/api/categorias/:id` | Edita / exclui categoria | Parte 2 |
-| GET, POST | `/api/fontes-destinos` | Lista / cria fontes e destinos | Parte 2 |
-| PUT, DELETE | `/api/fontes-destinos/:id` | Edita / exclui fonte/destino | Parte 2 |
-| GET | `/api/lancamentos?inicio=&fim=&tipo=&categoriaId=&fonteDestinoId=&pagina=` | Lista com filtros e paginação | Parte 2 |
-| POST | `/api/lancamentos` | Cria lançamento (com parcelas, se houver) | Parte 2 |
-| GET, PUT, DELETE | `/api/lancamentos/:id` | Detalha / edita / exclui (`?todasParcelas=true`) | Parte 2 |
-| GET | `/api/relatorios/categorias?inicio=&fim=` | Relatório por categoria (RF7) | — |
-| GET | `/api/relatorios/fontes-destinos?inicio=&fim=` | Relatório por fonte/destino (RF8) | — |
-| GET | `/api/relatorios/faturas?meses=3` | Previsão de faturas (RF9) | — |
+| GET, POST | `/api/categorias` | Lista / cria categorias | Pronta |
+| PUT, DELETE | `/api/categorias/:id` | Edita / exclui categoria (`409` se tiver lançamentos) | Pronta |
+| GET, POST | `/api/fontes-destinos` | Lista / cria fontes e destinos | Pronta |
+| PUT, DELETE | `/api/fontes-destinos/:id` | Edita / exclui fonte/destino (`409` se tiver lançamentos) | Pronta |
+| GET | `/api/lancamentos?inicio=&fim=&tipo=&categoriaId=&fonteDestinoId=&busca=&pagina=&porPagina=` | Lista com filtros, paginação e totais (padrão: mês corrente) | Pronta |
+| POST | `/api/lancamentos` | Cria lançamento (com parcelas, se houver) | Pronta |
+| GET, PUT, DELETE | `/api/lancamentos/:id` | Detalha / edita / exclui (`?todasParcelas=true`) | Pronta |
+| GET | `/api/relatorios/categorias?inicio=&fim=` | Relatório por categoria (RF7) | Pronta |
+| GET | `/api/relatorios/fontes-destinos?inicio=&fim=` | Relatório por fonte/destino (RF8) | Pronta |
+| GET | `/api/relatorios/faturas?meses=3` | Fatura aberta + próximas faturas de cada cartão (RF9) | Pronta |
 
 ### Autenticação
 
@@ -135,6 +157,18 @@ O token é assinado com `JWT_SECRET`, expira conforme `JWT_EXPIRES_IN` e guarda 
 - `200` → `{ "id": 1, "nome": "Ana Souza", "email": "ana@exemplo.com", "criado_em": "2026-11-16 10:00:00" }`
 - `401` → token ausente, inválido ou expirado
 
+### Relatórios
+
+Os totais são calculados **no servidor**, com `GROUP BY` e `SUM` no MySQL (`backend/src/models/Relatorio.js`). Sem `inicio` e `fim`, o período é o mês corrente.
+
+- **`/api/relatorios/categorias`** devolve, para saídas (`categorias`) e entradas (`entradas`), o total de cada categoria, o percentual sobre o total, o valor no **período anterior de mesmo tamanho** e a variação. Se o período for formado por meses completos (ex.: outubro), o anterior são os meses imediatamente anteriores (setembro); senão, o mesmo número de dias logo antes.
+- **`/api/relatorios/fontes-destinos`** devolve entradas, saídas e, para fontes do tipo `conta`, o saldo (entradas − saídas) no período.
+- **`/api/relatorios/faturas`** devolve, para cada cartão, a fatura **aberta** e as próximas `meses` faturas, com fechamento, vencimento, total e os lançamentos (com a parcela, ex.: `2/6`), além do **limite utilizado** (todas as parcelas ainda não vencidas) e do **limite disponível**.
+
+**Regra de fechamento** (`backend/src/models/faturas.js`): compra **antes** do dia de fechamento entra na fatura que fecha no mesmo mês; **no dia do fechamento ou depois**, na do mês seguinte. Se o vencimento for maior que o fechamento, vence no mesmo mês; senão, no seguinte. Dias inexistentes (31 em fevereiro) viram o último dia do mês.
+
+**Escolha de modelagem das parcelas:** cada parcela é gravada como um lançamento, com a data da compra somada de `k − 1` meses (parcela 1 na data da compra, parcela 2 um mês depois...). Assim a regra de fechamento é aplicada igualmente a qualquer lançamento, e os filtros por período da listagem mostram cada parcela no mês em que ela pesa no orçamento.
+
 ### Padrão de erro
 
 Todas as respostas de erro têm o mesmo formato; `campos` só aparece em erros de campo:
@@ -146,23 +180,20 @@ Todas as respostas de erro têm o mesmo formato; `campos` só aparece em erros d
 }
 ```
 
-## Para quem continua o projeto
+## Front-end
 
-**Back-end (Parte 2)**
+SPA em React com uma rota por tela, todas protegidas (sem login, redireciona para `/login`):
 
-- Proteger cada recurso registrando o middleware antes do Router, em `server.js`:
-  `app.use('/api/categorias', autenticar, categoriasRoutes);`
-- O id do usuário logado está em `req.usuarioId` (vem do token). Toda consulta filtra por `usuario_id = ?` com esse valor, nunca com id vindo do corpo ou da URL.
-- Para erros esperados, lance `new ErroApi(status, mensagem, campos)` (de `middlewares/erros.js`); o middleware de erros monta a resposta no padrão. No Express 5, erros em rotas `async` chegam ao middleware sem precisar de `try/catch`.
-- Para transações (parcelas), use `pool.getConnection()` e o mesmo padrão de `Usuario.cadastrar`.
-- Os lançamentos de 3 meses do seed vão no final de `database/seed.sql`.
+| Rota | Tela |
+|---|---|
+| `/login`, `/cadastro` | Login e cadastro (erros do servidor aparecem no campo, ex.: CPF já cadastrado) |
+| `/` | Visão geral do mês: entradas, saídas, saldo, fatura aberta, gráficos e lançamentos recentes |
+| `/lancamentos` | Cadastro, edição e exclusão (pergunta "só esta parcela ou todas"), filtros, totais do período, paginação e exportação CSV |
+| `/categorias`, `/fontes-destinos` | Cadastros |
+| `/relatorios` | RF7 e RF8 com tabelas e gráficos |
+| `/faturas` | RF9 por cartão, com limite utilizado e disponível |
 
-**Front-end (Parte 3)**
-
-- Login devolve `token` e `usuario`; enviar `Authorization: Bearer <token>` em todas as requisições protegidas.
-- Qualquer `401` em rota protegida significa token ausente, inválido ou expirado: fazer logout e voltar ao login.
-- Em `400` e `409`, as mensagens de cada campo estão em `campos` (ex.: `campos.cpf`).
-- A API aceita requisições da origem definida em `CORS_ORIGIN` (padrão `http://localhost:5173`).
+Todas as chamadas passam por `frontend/src/services/api.js`, que envia o token e, ao receber `401`, faz logout e volta ao login. O `AuthContext` guarda usuário e token (no `localStorage`, para sobreviver ao recarregamento) e expõe `login`, `logout` e `cadastrar`.
 
 ## Testando pela linha de comando
 
