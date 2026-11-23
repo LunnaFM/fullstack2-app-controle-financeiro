@@ -16,6 +16,7 @@ const authRoutes = require('./routes/auth.routes');
 const categoriaRoutes = require('./routes/categoria.routes');
 const fonteDestinoRoutes = require('./routes/fonteDestino.routes');
 const lancamentoRoutes = require('./routes/lancamento.routes');
+const relatorioRoutes = require('./routes/relatorio.routes');
 
 const app = express();
 
@@ -36,6 +37,12 @@ app.use(
   '/api/lancamentos',
   autenticar,
   lancamentoRoutes
+);
+
+app.use(
+  '/api/relatorios',
+  autenticar,
+  relatorioRoutes
 );
 
 // Tratamento de erros
