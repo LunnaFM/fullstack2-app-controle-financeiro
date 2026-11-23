@@ -6,6 +6,10 @@
 --   bruno@exemplo.com  CPF 111.444.777-35
 -- O senha_hash abaixo foi gerado com bcrypt (custo 10), o mesmo usado no cadastro.
 
+-- Garante que os acentos sejam lidos como UTF-8, mesmo que o cliente
+-- do MySQL esteja configurado com outro conjunto de caracteres.
+SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 USE controle_financeiro;
 
 -- ---------------------------------------------------------------------------
