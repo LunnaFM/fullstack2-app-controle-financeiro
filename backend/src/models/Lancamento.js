@@ -5,6 +5,7 @@ const v = require('./financeiroValidacoes');
 const { ErroApi } = require('../middlewares/erros');
 const Categoria = require('./Categoria');
 const FonteDestino = require('./FonteDestino');
+const { hojeISO, mesDe } = require('./periodos');
 
 const COL = `
   id, usuario_id, tipo, descricao, valor, data,
@@ -97,9 +98,17 @@ async function relacionamentos(usuarioId, d, conn = pool) {
   return fonte;
 }
 
-async function listar(usuarioId, q) {
+async function listar(usuarioId, consulta) {
   const where = ['usuario_id = ?'];
   const args = [usuarioId];
+
+  // Sem período informado, o padrão é o mês corrente (RF6).
+  const q = { ...consulta };
+  if (!q.inicio && !q.fim) {
+    const mes = mesDe(hojeISO());
+    q.inicio = mes.inicio;
+    q.fim = mes.fim;
+  }
 
   if (q.inicio) {
     where.push('data >= ?');
@@ -143,6 +152,12 @@ async function listar(usuarioId, q) {
         'fonteDestinoId'
       )
     );
+  }
+
+  // Busca por trecho da descrição (o texto vai como parâmetro, nunca concatenado no SQL)
+  if (typeof q.busca === 'string' && q.busca.trim()) {
+    where.push('descricao LIKE ?');
+    args.push(`%${q.busca.trim().slice(0, 120)}%`);
   }
 
   const pagina = v.inteiro(
@@ -202,6 +217,7 @@ async function listar(usuarioId, q) {
     converter(entradas) - converter(saidas);
 
   return {
+    periodo: { inicio: q.inicio ?? null, fim: q.fim ?? null },
     dados: rows,
     pagina,
     porPagina,
