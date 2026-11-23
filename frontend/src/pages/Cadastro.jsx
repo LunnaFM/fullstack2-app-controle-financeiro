@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Wallet, User, Mail, FileText, Lock, UserPlus, AlertCircle, Check, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { mascararCpf } from '../services/formatacao';
 
 export default function Cadastro() {
   const { cadastrar } = useAuth();
@@ -117,7 +118,8 @@ export default function Cadastro() {
                 placeholder="000.000.000-00"
                 className={camposErro.cpf ? 'input-error' : ''}
                 value={form.cpf}
-                onChange={(e) => atualizarCampo('cpf', e.target.value)}
+                inputMode="numeric"
+                onChange={(e) => atualizarCampo('cpf', mascararCpf(e.target.value))}
                 required
               />
             </div>
