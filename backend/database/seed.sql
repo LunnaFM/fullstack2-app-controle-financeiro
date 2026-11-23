@@ -45,7 +45,7 @@ SELECT u.id, c.nome, c.tipo
 INSERT INTO fontes_destinos (usuario_id, nome, tipo, dia_fechamento, dia_vencimento, limite) VALUES
   (@ana,   'Conta corrente', 'conta',          NULL, NULL, NULL),
   (@ana,   'Salário',        'renda',          NULL, NULL, NULL),
-  (@ana,   'Cartão Nubank',  'cartao_credito', 3,    10,   3000.00),
+  (@ana,   'Cartão Nubank',  'cartao_credito', 3,    10,   5000.00),
   (@bruno, 'Conta corrente', 'conta',          NULL, NULL, NULL),
   (@bruno, 'Salário',        'renda',          NULL, NULL, NULL),
   (@bruno, 'Visa crédito',   'cartao_credito', 25,   5,    5000.00);
